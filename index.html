@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7c600" />
+  <title>SFK Memories Story Maker</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brandMark" aria-hidden="true">SFK</div>
+    <div class="brandText">
+      <p class="eyebrow">SFK Memories</p>
+      <h1>Story Maker</h1>
+      <span>No login • No Firebase • Local generator only</span>
+    </div>
+  </header>
+
+  <main class="appShell">
+    <section class="panel editorPanel" aria-label="Memory editor">
+      <div class="sectionHead">
+        <div>
+          <p class="eyebrow">Create</p>
+          <h2>Make a ready-to-post story</h2>
+        </div>
+        <button class="ghostBtn" id="resetBtn" type="button">Reset</button>
+      </div>
+
+      <div class="quickPresets" aria-label="Quick presets">
+        <button class="presetBtn" type="button" data-preset="quick">SFK Quick Pic</button>
+        <button class="presetBtn" type="button" data-preset="monday">Normal Monday</button>
+        <button class="presetBtn" type="button" data-preset="online">Online Class</button>
+        <button class="presetBtn" type="button" data-preset="ict">ICT Class</button>
+      </div>
+
+      <label class="fieldGroup">
+        <span>Title</span>
+        <input id="titleInput" type="text" maxlength="80" value="SFK Quick Pic" placeholder="Example: SFK Quick Pic" />
+      </label>
+
+      <label class="fieldGroup">
+        <span>Caption / short details</span>
+        <textarea id="captionInput" maxlength="220" rows="4" placeholder="Write a short caption..."></textarea>
+      </label>
+
+      <div class="gridTwo">
+        <label class="fieldGroup">
+          <span>Date label</span>
+          <input id="dateInput" type="text" maxlength="45" />
+        </label>
+        <label class="fieldGroup">
+          <span>Posted by</span>
+          <input id="postedByInput" type="text" maxlength="35" value="Sir JR" />
+        </label>
+      </div>
+
+      <div class="fieldGroup">
+        <span>Photos</span>
+        <label class="uploadBox" for="photoInput">
+          <input id="photoInput" type="file" accept="image/*" multiple />
+          <strong>Tap to add photos</strong>
+          <small>Local only. Nothing is uploaded online.</small>
+        </label>
+        <div class="photoStrip" id="photoStrip" aria-live="polite"></div>
+      </div>
+
+      <div class="fieldGroup">
+        <span>Output size</span>
+        <div class="segmented" role="group" aria-label="Output size">
+          <button class="segment active" type="button" data-size="story">FB / IG Story<br><small>1080 × 1920</small></button>
+          <button class="segment" type="button" data-size="post">Original Post<br><small>1080 × 1350</small></button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="primaryBtn" id="downloadBtn" type="button">Download PNG</button>
+        <button class="secondaryBtn" id="shareBtn" type="button">Share</button>
+      </div>
+
+      <p class="note">Tip: This is only a generator. It will not affect your ClassBoard, Memories posts, Firebase, or Google Drive.</p>
+    </section>
+
+    <section class="panel previewPanel" aria-label="Preview">
+      <div class="sectionHead previewHead">
+        <div>
+          <p class="eyebrow">Preview</p>
+          <h2 id="previewSizeLabel">FB / IG Story</h2>
+        </div>
+        <span class="statusPill" id="statusPill">Ready</span>
+      </div>
+      <div class="canvasStage">
+        <canvas id="shareCanvas" width="1080" height="1920"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

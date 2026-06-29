@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="referrer" content="origin" />
+  <meta name="theme-color" content="#f7c600" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>SFK Memories</title>
+  <link rel="manifest" href="manifest.webmanifest?v=14" />
+  <link rel="icon" href="icons/icon-192.png?v=14" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png?v=14" />
+  <link rel="stylesheet" href="memories.css?v=72-mobile-story-maker" />
+  <script src="orientation-lock.js?v=3-phone-device-lock" defer></script>
+</head>
+<body>
+  <header class="memoryTopbar">
+    <div class="memoryTopbarInner">
+      <a class="backButton" href="index.html" aria-label="Back to ClassBoard">&#8592;</a>
+      <a class="memoryBrand" href="memories.html" aria-label="SFK Memories home">
+        <span class="brandMark"><span class="brandMarkText">SFK</span></span>
+        <span><strong>SFK Memories</strong><small>#BeKind Collection</small></span>
+      </a>
+      <div class="memoryTopbarActions">
+        <button id="musicAutoplayToggle" class="musicAutoplayToggle" type="button" aria-pressed="false" title="Automatically play music on visible posts">
+          <span class="autoplayIcon" aria-hidden="true">&#9835;</span>
+        </button>
+        <button
+          id="topPostButton"
+          class="headerAddButton"
+          type="button"
+          aria-label="Create a memory"
+          title="Create a memory"
+        >+</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="memoryPage">
+    <aside class="memorySidebar">
+      <div class="sidebarIdentity">
+        <div class="largeBrandMark"><span class="brandMarkText">SFK</span></div>
+        <h1>SFK Memories</h1>
+        <p>Our moments, milestones, and kind beginnings.</p>
+      </div>
+
+      <div class="memoryStats" aria-label="Gallery statistics">
+        <div><strong id="postCount">0</strong><span>Posts</span></div>
+        <div><strong id="photoCount">0</strong><span>Photos</span></div>
+        <div><strong id="videoCount">0</strong><span>Videos</span></div>
+      </div>
+
+      <nav class="sideNav" aria-label="Memories filters">
+        <button class="sideNavButton active" data-filter="all" type="button"><span>&#9632;</span> Latest</button>
+        <button class="sideNavButton" data-filter="photos" type="button"><span>&#9673;</span> Photos</button>
+        <button class="sideNavButton" data-filter="videos" type="button"><span>&#9654;</span> Videos</button>
+      </nav>
+
+      <button id="sidePostButton" class="primaryButton wideButton" type="button">+ Add a Memory</button>
+      <a class="dashboardLink" href="index.html">Back to ClassBoard</a>
+    </aside>
+
+    <section class="memoryContent" aria-labelledby="feedTitle">
+      <div class="mobileIntro">
+        <div>
+          <p class="eyebrow">SFK 2026-2027</p>
+          <h1 id="feedTitle">Our Memories</h1>
+        </div>
+        <div class="mobileStats"><strong id="mobilePostCount">0</strong> posts</div>
+      </div>
+
+      <div class="memoryHighlights" aria-label="Quick filters">
+        <button class="highlight active" data-filter="all" type="button"><span class="highlightRing"><b>SFK</b></span><small>Latest</small></button>
+        <button class="highlight" data-filter="photos" type="button"><span class="highlightRing"><b>&#9673;</b></span><small>Photos</small></button>
+        <button class="highlight" data-filter="videos" type="button"><span class="highlightRing"><b>&#9654;</b></span><small>Videos</small></button>
+      </div>
+
+      <div id="feedStatus" class="feedStatus" role="status">Loading memories...</div>
+      <div id="memoryFeed" class="memoryFeed"></div>
+
+      <div id="emptyMemories" class="emptyMemories" hidden>
+        <div class="emptyMark">SFK</div>
+        <h2>No memories here yet</h2>
+        <p>The first beautiful moment is waiting to be posted.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="composeModal" class="modalLayer" hidden>
+    <div class="modalBackdrop" data-close-modal="composeModal"></div>
+    <section class="composeModal" role="dialog" aria-modal="true" aria-labelledby="composeTitle">
+      <header class="modalHeader">
+        <div><p class="eyebrow">ADMIN AND OFFICERS</p><h2 id="composeTitle">Create Memory</h2></div>
+        <div class="composeHeaderActions">
+          <div id="postingIdentity" class="headerRoleIdentity" hidden>
+            <span class="miniBrandMark">SFK</span>
+            <strong id="postingRole">Officer</strong>
+            <button id="changeRoleButton" type="button">Change</button>
+          </div>
+          <button class="iconButton" type="button" data-close-modal="composeModal" aria-label="Close">&#215;</button>
+        </div>
+      </header>
+
+      <div id="memoryAuthStep" class="authStep">
+        <div class="authBadge">SFK</div>
+        <h3>Unlock posting</h3>
+        <p>Choose your role and enter your ClassBoard PIN.</p>
+        <label>Role
+          <select id="memoryRole">
+            <option value="Officer">Officer</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </label>
+        <label>PIN
+          <input id="memoryPin" type="password" inputmode="text" autocomplete="current-password" placeholder="Enter PIN" />
+        </label>
+        <p id="authMessage" class="formMessage" aria-live="polite"></p>
+        <button id="unlockPostingButton" class="primaryButton wideButton" type="button">Continue</button>
+      </div>
+
+      <form id="memoryForm" class="memoryForm" hidden>
+        <div class="formGrid">
+          <label>Memory title
+            <input id="memoryTitle" type="text" maxlength="80" placeholder="e.g. First Week Together" />
+          </label>
+          <label>Event date
+            <input id="memoryDate" type="date" required />
+          </label>
+        </div>
+
+        <label>Posted by
+          <input id="memoryPostedBy" type="text" maxlength="60" required placeholder="Name or officer position" />
+        </label>
+
+        <label>Caption and details
+          <textarea id="memoryCaption" rows="4" maxlength="1200" placeholder="Tell the story behind this memory..."></textarea>
+        </label>
+
+        <label class="uploadZone" for="memoryFiles">
+          <span class="uploadIcon">+</span>
+          <strong>Add photos or a short video</strong>
+          <small>Up to 6 files. Photos are optimized automatically.</small>
+          <input id="memoryFiles" type="file" accept="image/*,video/*" multiple />
+        </label>
+        <div id="mediaPreview" class="mediaPreview"></div>
+        <button id="togglePostPreviewButton" class="previewToggleButton" type="button" aria-expanded="false" aria-controls="composePreview">
+          Show Post Preview
+        </button>
+        <div id="composePreview" class="composePreview" aria-live="polite" hidden></div>
+
+        <div class="orDivider"><span>or</span></div>
+        <label>Video link
+          <input id="memoryVideoUrl" type="url" placeholder="YouTube, Google Drive, or direct video URL" />
+          <small class="fieldHint">For large videos, upload as YouTube Unlisted or Google Drive, then paste the link here.</small>
+        </label>
+
+        <button id="toggleMusicFieldsButton" class="addMusicButton" type="button" aria-expanded="false" aria-controls="musicFieldsPanel">
+          <span>&#9835;</span> Add background music
+        </button>
+
+        <div id="musicFieldsPanel" class="musicFields" hidden>
+          <div class="musicFieldsTitle"><span>&#9835;</span><div><strong>Background music</strong><small>Optional. Add this only when the memory needs a song.</small></div></div>
+          <section class="youtubeSongPicker" aria-labelledby="youtubeSongPickerTitle">
+            <div class="memoryMusicLibraryHeader">
+              <div>
+                <strong id="youtubeSongPickerTitle">Search YouTube Music</strong>
+                <small>Search a song or artist, preview it, then select it.</small>
+              </div>
+            </div>
+            <div class="youtubeSearchRow">
+              <input id="youtubeSongSearch" type="search" placeholder="Song title or artist" autocomplete="off" />
+              <button id="searchYoutubeSongsButton" type="button">Search</button>
+            </div>
+            <p id="youtubeSongSearchMessage" class="musicLibraryMessage" aria-live="polite"></p>
+            <div id="youtubeSongPreview" class="youtubeSongPreview" hidden></div>
+            <div id="youtubeSongResults" class="youtubeSongResults"></div>
+          </section>
+
+          <label>Displayed music title
+            <input id="memoryMusicTitle" type="text" maxlength="80" placeholder="Optional. Example: SFK Theme Song" />
+            <small class="fieldHint">This title appears on the music pill. A selected YouTube song fills it automatically.</small>
+          </label>
+
+          <button id="toggleAdditionalMusicSources" class="additionalMusicToggle" type="button" aria-expanded="false" aria-controls="additionalMusicSources">
+            Show Music Library &amp; Direct Link
+          </button>
+
+          <div id="additionalMusicSources" hidden>
+            <div class="musicLibraryOr"><span>or choose saved audio</span></div>
+            <section class="memoryMusicLibrary" aria-labelledby="memoryMusicLibraryTitle">
+              <div class="memoryMusicLibraryHeader">
+                <div>
+                  <strong id="memoryMusicLibraryTitle">Music Library</strong>
+                  <small>Select a saved song or preview it first.</small>
+                </div>
+                <button id="manageMusicLibraryButton" type="button">Manage</button>
+              </div>
+              <label class="musicLibrarySearchLabel" for="musicLibrarySearch">
+                <span aria-hidden="true">&#128269;</span>
+                <input id="musicLibrarySearch" type="search" placeholder="Search songs" autocomplete="off" />
+              </label>
+              <div id="musicLibraryList" class="musicLibraryList">
+                <div class="musicLibraryStatus">Open background music to load songs.</div>
+              </div>
+              <p id="musicLibraryStatus" class="musicLibraryMessage" aria-live="polite"></p>
+            </section>
+
+            <div class="musicLibraryOr"><span>or use a direct link</span></div>
+            <label>Music link
+              <input id="memoryMusicUrl" type="url" placeholder="Direct MP3/M4A/OGG or JukeHost audio link" />
+              <small class="fieldHint">Use this only when the song is not yet saved in the Music Library.</small>
+            </label>
+            <div class="musicTestRow">
+              <button id="testMusicLinkButton" class="secondaryButton" type="button">Test Music Link</button>
+              <small id="musicTestMessage" class="musicTestMessage">Paste a direct audio link, then test before posting.</small>
+            </div>
+          </div>
+        </div>
+
+        <p id="postMessage" class="formMessage" aria-live="polite"></p>
+        <div class="formActions">
+          <button class="secondaryButton" type="button" data-close-modal="composeModal">Cancel</button>
+          <button id="publishMemoryButton" class="primaryButton" type="submit">Share Memory</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div id="musicLibraryModal" class="modalLayer musicLibraryModal" hidden>
+    <div class="modalBackdrop" data-close-music-library></div>
+    <section class="musicLibraryManager" role="dialog" aria-modal="true" aria-labelledby="musicLibraryManagerTitle">
+      <header class="modalHeader">
+        <div>
+          <p class="eyebrow">ADMIN + OFFICERS</p>
+          <h2 id="musicLibraryManagerTitle">Manage Music Library</h2>
+        </div>
+        <button class="iconButton" type="button" data-close-music-library aria-label="Close">&times;</button>
+      </header>
+
+      <details class="youtubeApiSetup">
+        <summary>YouTube Search Setup</summary>
+        <div>
+          <label>YouTube Data API v3 key
+            <input id="youtubeApiKey" type="password" autocomplete="off" placeholder="Paste the restricted API key" />
+          </label>
+          <small>Restrict this key to https://sfk2627.github.io/* and YouTube Data API v3.</small>
+          <button id="saveYoutubeApiKey" class="primaryButton" type="button">Save API Key</button>
+          <p id="youtubeApiKeyMessage" class="formMessage" aria-live="polite"></p>
+        </div>
+      </details>
+
+      <form id="musicLibraryForm" class="musicLibraryForm">
+        <input id="musicLibrarySongId" type="hidden" />
+        <label>Song title
+          <input id="musicLibrarySongTitle" type="text" maxlength="120" required placeholder="Enter the displayed song title" />
+        </label>
+        <label>JukeHost or direct audio link
+          <input id="musicLibrarySongUrl" type="url" required placeholder="https://audio.jukehost.co.uk/..." />
+        </label>
+        <label>Category
+          <input id="musicLibrarySongCategory" type="text" maxlength="50" value="Pang song" placeholder="Pang song" />
+        </label>
+        <p id="musicLibraryManagerMessage" class="formMessage" aria-live="polite"></p>
+        <div class="musicLibraryFormActions">
+          <button id="cancelMusicLibraryEdit" class="secondaryButton" type="button" hidden>Cancel Edit</button>
+          <button id="saveMusicLibrarySong" class="primaryButton" type="submit">Add Song</button>
+        </div>
+      </form>
+
+      <details class="musicLibraryBulk">
+        <summary>Bulk Import Songs</summary>
+        <div class="musicLibraryBulkBody">
+          <label>Library / category for this batch
+            <input id="bulkMusicLibraryCategory" type="text" maxlength="50" value="Pang song" placeholder="Pang song" />
+          </label>
+          <label>Direct links
+            <textarea
+              id="bulkMusicLibraryEntries"
+              rows="7"
+              placeholder="https://audio.jukehost.co.uk/...&#10;https://audio.jukehost.co.uk/..."></textarea>
+            <small class="fieldHint">Paste one direct JukeHost link per line.</small>
+          </label>
+          <p id="bulkMusicLibraryMessage" class="formMessage" aria-live="polite"></p>
+          <div class="musicLibraryBulkActions">
+            <button id="importMusicLibrarySongs" class="primaryButton" type="button">Import Songs</button>
+          </div>
+        </div>
+      </details>
+
+      <div class="musicLibraryManageHeading">
+        <strong>Saved Songs</strong>
+        <small>Changes sync for Admin and Officers.</small>
+      </div>
+      <div class="musicLibrarySelectionBar">
+        <label>
+          <input id="selectAllMusicLibrarySongs" type="checkbox" />
+          <span>Select All</span>
+        </label>
+        <span id="selectedMusicLibraryCount">0 songs</span>
+        <button id="deleteSelectedMusicLibrarySongs" type="button" disabled>Delete Selected</button>
+      </div>
+      <div id="musicLibraryManageList" class="musicLibraryManageList"></div>
+    </section>
+  </div>
+
+  <div id="viewerModal" class="viewerModal" hidden>
+    <button id="closeViewerButton" class="viewerClose" type="button" aria-label="Close viewer">&#215;</button>
+    <button id="viewerPrevious" class="viewerArrow viewerPrevious" type="button" aria-label="Previous media">&#8249;</button>
+    <div id="viewerContent" class="viewerContent"></div>
+    <button id="viewerNext" class="viewerArrow viewerNext" type="button" aria-label="Next media">&#8250;</button>
+    <div id="viewerCounter" class="viewerCounter"></div>
+  </div>
+
+  <div id="memoryToast" class="memoryToast" role="status" aria-live="polite"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js?v=2-secure-auth"></script>
+  <script src="auth.js?v=2-persistent-login"></script>
+  <script src="firebase-adapter.js?v=15-secure-auth"></script>
+  <script src="pwa.js?v=15"></script>
+  <script src="memories.js?v=72-mobile-story-maker"></script>
+</body>
+</html>
