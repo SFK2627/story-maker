@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v113-mobile-story-maker";
+const CACHE_NAME = "sfk-classboard-v114-share-sizes-spacing";
 const APP_SHELL = [
   "./",
   "./index.html",

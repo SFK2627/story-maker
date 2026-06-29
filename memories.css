@@ -3021,7 +3021,7 @@ body.shareFormatOpen {
 
 .shareFormatChoices {
   display: grid;
-  gap: 9px;
+  gap: 10px;
 }
 
 .shareFormatChoice {
@@ -3040,7 +3040,7 @@ body.shareFormatOpen {
   cursor: pointer;
 }
 
-.shareFormatChoiceStory {
+.shareFormatChoiceFeatured {
   border-color: #d7ae00;
   background: #fff9dc;
 }
@@ -3088,10 +3088,37 @@ body.shareFormatOpen {
   height: 48px;
 }
 
+.shareFormatPreviewSquare {
+  width: 36px;
+  height: 36px;
+}
+
+.shareFormatPreviewWide {
+  width: 44px;
+  height: 24px;
+}
+
+.shareFormatPreviewLandscape {
+  width: 46px;
+  height: 26px;
+}
+
+.shareFormatPreviewWallpaper {
+  width: 25px;
+  height: 48px;
+  border-radius: 8px;
+}
+
 .shareFormatArrow {
   color: #111;
   font-size: 1.55rem;
   line-height: 1;
+}
+
+@media (min-width: 540px) {
+  .shareFormatChoices {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 720px) {

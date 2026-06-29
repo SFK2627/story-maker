@@ -14,6 +14,64 @@ const MEMORY_SHARE_IMAGE_HEIGHT = 1350;
 const MEMORY_SHARE_STORY_WIDTH = 1080;
 const MEMORY_SHARE_STORY_HEIGHT = 1920;
 const MEMORY_SHARE_PREVIEW_LIMIT = 4;
+const MEMORY_SHARE_FORMATS = {
+  original: {
+    key: "original",
+    label: "Original Post",
+    shortLabel: "original",
+    width: MEMORY_SHARE_IMAGE_WIDTH,
+    height: MEMORY_SHARE_IMAGE_HEIGHT,
+    style: "portrait",
+    previewClass: "shareFormatPreviewOriginal"
+  },
+  story: {
+    key: "story",
+    label: "FB / IG Story",
+    shortLabel: "story",
+    width: MEMORY_SHARE_STORY_WIDTH,
+    height: MEMORY_SHARE_STORY_HEIGHT,
+    style: "story",
+    previewClass: "shareFormatPreviewStory",
+    featured: true
+  },
+  square: {
+    key: "square",
+    label: "Square Post",
+    shortLabel: "square",
+    width: 1080,
+    height: 1080,
+    style: "square",
+    previewClass: "shareFormatPreviewSquare"
+  },
+  wide: {
+    key: "wide",
+    label: "Facebook Wide",
+    shortLabel: "wide",
+    width: 1200,
+    height: 630,
+    style: "banner",
+    previewClass: "shareFormatPreviewWide"
+  },
+  landscape: {
+    key: "landscape",
+    label: "Widescreen",
+    shortLabel: "widescreen",
+    width: 1920,
+    height: 1080,
+    style: "landscape",
+    previewClass: "shareFormatPreviewLandscape"
+  },
+  wallpaper: {
+    key: "wallpaper",
+    label: "Phone Wallpaper",
+    shortLabel: "wallpaper",
+    width: 1440,
+    height: 2560,
+    style: "story",
+    previewClass: "shareFormatPreviewWallpaper"
+  }
+};
+const MEMORY_SHARE_FORMAT_ORDER = ["original", "story", "square", "wide", "landscape", "wallpaper"];
 const MEMORY_MUSIC_LIBRARY_DOC_ID = "memoryMusicLibrary";
 const DEFAULT_MEMORY_MUSIC_LIBRARY = [
   {
@@ -2282,6 +2340,7 @@ async function shareMemory(id) {
   const format = await chooseMemoryShareFormat();
   if (!format) return;
 
+  const formatConfig = getMemoryShareFormatConfig(format);
   const shareUrl = new URL("memories.html", window.location.href);
   shareUrl.searchParams.set("memory", id);
   const shareData = {
@@ -2293,7 +2352,7 @@ async function shareMemory(id) {
 
   try {
     setShareButtonBusy(button, true);
-    showMemoryToast(format === "story" ? "Creating Story share image..." : "Creating original share image...");
+    showMemoryToast(`Creating ${formatConfig.label} share image...`);
 
     const image = await createMemoryShareImage(post, format);
     if (image?.file && navigator.share && navigator.canShare && navigator.canShare({ files: [image.file] })) {
@@ -2332,9 +2391,24 @@ async function shareMemory(id) {
   }
 }
 
+function getMemoryShareFormatConfig(format = "original") {
+  return MEMORY_SHARE_FORMATS[format] || MEMORY_SHARE_FORMATS.original;
+}
+
 function chooseMemoryShareFormat() {
   return new Promise((resolve) => {
     document.querySelector(".shareFormatLayer")?.remove();
+
+    const choicesMarkup = MEMORY_SHARE_FORMAT_ORDER.map((key) => {
+      const format = MEMORY_SHARE_FORMATS[key];
+      return `
+          <button class="shareFormatChoice ${format.featured ? "shareFormatChoiceFeatured" : ""}" type="button" data-share-format="${format.key}">
+            <span class="shareFormatPreview ${format.previewClass}" aria-hidden="true"></span>
+            <span><strong>${format.label}</strong><small>${format.width.toLocaleString()} &times; ${format.height.toLocaleString()}</small></span>
+            <span class="shareFormatArrow" aria-hidden="true">&rsaquo;</span>
+          </button>
+      `;
+    }).join("");
 
     const layer = document.createElement("div");
     layer.className = "shareFormatLayer";
@@ -2349,18 +2423,7 @@ function chooseMemoryShareFormat() {
           </div>
           <button class="shareFormatClose" type="button" data-share-format="" aria-label="Close">&times;</button>
         </div>
-        <div class="shareFormatChoices">
-          <button class="shareFormatChoice" type="button" data-share-format="original">
-            <span class="shareFormatPreview shareFormatPreviewOriginal" aria-hidden="true"></span>
-            <span><strong>Original Post</strong><small>1080 &times; 1350</small></span>
-            <span class="shareFormatArrow" aria-hidden="true">&rsaquo;</span>
-          </button>
-          <button class="shareFormatChoice shareFormatChoiceStory" type="button" data-share-format="story">
-            <span class="shareFormatPreview shareFormatPreviewStory" aria-hidden="true"></span>
-            <span><strong>FB / IG Story</strong><small>1080 &times; 1920</small></span>
-            <span class="shareFormatArrow" aria-hidden="true">&rsaquo;</span>
-          </button>
-        </div>
+        <div class="shareFormatChoices">${choicesMarkup}</div>
       </section>
     `;
 
@@ -2412,17 +2475,17 @@ function setShareButtonBusy(button, busy) {
 }
 
 async function createMemoryShareImage(post, format = "original") {
-  const isStory = format === "story";
+  const formatConfig = getMemoryShareFormatConfig(format);
   const canvas = document.createElement("canvas");
-  canvas.width = isStory ? MEMORY_SHARE_STORY_WIDTH : MEMORY_SHARE_IMAGE_WIDTH;
-  canvas.height = isStory ? MEMORY_SHARE_STORY_HEIGHT : MEMORY_SHARE_IMAGE_HEIGHT;
+  canvas.width = formatConfig.width;
+  canvas.height = formatConfig.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas is not available.");
 
   drawShareBackground(ctx, canvas.width, canvas.height);
 
   const imageCount = (post.media || []).filter((item) => item.kind === "image").length;
-  const layout = getMemoryShareLayout(canvas.width, canvas.height, isStory, imageCount);
+  const layout = getMemoryShareLayout(canvas.width, canvas.height, formatConfig.style, imageCount);
 
   ctx.save();
   ctx.shadowColor = "rgba(17,17,17,.16)";
@@ -2447,11 +2510,11 @@ async function createMemoryShareImage(post, format = "original") {
 
   drawShareHeader(ctx, post, layout.headerX, layout.headerY, layout.headerW);
   await drawShareMedia(ctx, post, layout.mediaX, layout.mediaY, layout.mediaW, layout.mediaH);
-  drawShareDetails(ctx, post, layout.detailsX, layout.detailsY, layout.detailsW, imageCount > 0, canvas.height, layout.footerOffset);
+  drawShareDetails(ctx, post, layout.detailsX, layout.detailsY, layout.detailsW, imageCount > 0, canvas.width, canvas.height, layout.footerOffset);
   drawShareFooter(ctx, canvas.width, canvas.height, layout.footerOffset);
 
   const blob = await canvasToBlob(canvas);
-  const fileSuffix = isStory ? "-story" : "";
+  const fileSuffix = formatConfig.key === "original" ? "" : `-${formatConfig.key}`;
   const fileName = `${safeShareFileName(post.title || "sfk-memory")}${fileSuffix}.png`;
   const file = typeof File !== "undefined"
     ? new File([blob], fileName, { type: "image/png", lastModified: Date.now() })
@@ -2459,56 +2522,138 @@ async function createMemoryShareImage(post, format = "original") {
   return { blob, file, fileName };
 }
 
-function getMemoryShareLayout(width, height, isStory, imageCount) {
-  if (!isStory) {
-    const margin = 64;
-    const cardX = 42;
-    const cardY = 42;
-    const cardW = width - 84;
-    const cardH = height - (cardY * 2);
-    const mediaY = 190;
-    const mediaH = imageCount ? 640 : 575;
-    const footerOffset = 118;
+function getMemoryShareLayout(width, height, style = "portrait", imageCount = 0) {
+  if (style === "story") {
+    const sideSafe = Math.round(width * 0.035);
+    const topSafe = Math.round(height * 0.088);
+    const bottomSafe = Math.round(height * 0.14);
+    const cardX = sideSafe;
+    const cardY = topSafe;
+    const cardW = width - (sideSafe * 2);
+    const cardH = height - topSafe - bottomSafe;
+    const innerPad = Math.round(cardW * 0.03);
+    const headerInset = Math.round(cardW * 0.035);
+    const headerX = cardX + headerInset;
+    const headerY = cardY + Math.round(cardH * 0.04);
+    const headerW = cardW - (headerInset * 2);
+    const mediaX = cardX + innerPad;
+    const mediaY = headerY + Math.round(cardH * 0.08);
+    const mediaW = cardW - (innerPad * 2);
+    const mediaH = imageCount ? Math.round(cardH * 0.54) : Math.round(cardH * 0.44);
+    const detailsY = mediaY + mediaH + Math.round(cardH * 0.062);
+    const footerY = cardY + cardH - Math.round(cardH * 0.07);
     return {
       cardX,
       cardY,
       cardW,
       cardH,
       cardRadius: 42,
-      cardShadowBlur: 30,
-      cardShadowOffsetY: 12,
-      headerX: margin,
-      headerY: 78,
-      headerW: width - (margin * 2),
-      mediaX: margin,
+      cardShadowBlur: 32,
+      cardShadowOffsetY: 14,
+      headerX,
+      headerY,
+      headerW,
+      mediaX,
       mediaY,
-      mediaW: width - (margin * 2),
+      mediaW,
       mediaH,
-      detailsX: margin,
-      detailsY: mediaY + mediaH + 54,
-      detailsW: width - (margin * 2),
-      footerOffset
+      detailsX: mediaX,
+      detailsY,
+      detailsW: mediaW,
+      footerOffset: height - footerY
     };
   }
 
-  const sideSafe = 38;
-  const topSafe = 168;
-  const bottomSafe = 268;
-  const cardX = sideSafe;
-  const cardY = topSafe;
-  const cardW = width - (sideSafe * 2);
-  const cardH = height - topSafe - bottomSafe;
-  const innerPad = 28;
-  const headerInset = 34;
-  const headerX = cardX + headerInset;
-  const headerY = cardY + 60;
-  const headerW = cardW - (headerInset * 2);
-  const mediaX = cardX + innerPad;
-  const mediaY = headerY + 118;
-  const mediaW = cardW - (innerPad * 2);
-  const mediaH = imageCount ? 820 : 700;
-  const detailsY = mediaY + mediaH + 76;
-  const footerY = cardY + cardH - 92;
+  if (style === "square") {
+    const safe = Math.round(width * 0.045);
+    const cardX = safe;
+    const cardY = safe;
+    const cardW = width - (safe * 2);
+    const cardH = height - (safe * 2);
+    const innerPad = Math.round(cardW * 0.034);
+    const headerInset = Math.round(cardW * 0.04);
+    const headerX = cardX + headerInset;
+    const headerY = cardY + Math.round(cardH * 0.05);
+    const headerW = cardW - (headerInset * 2);
+    const mediaX = cardX + innerPad;
+    const mediaY = headerY + Math.round(cardH * 0.095);
+    const mediaW = cardW - (innerPad * 2);
+    const mediaH = imageCount ? Math.round(cardH * 0.44) : Math.round(cardH * 0.35);
+    const detailsY = mediaY + mediaH + Math.round(cardH * 0.072);
+    const footerY = cardY + cardH - Math.round(cardH * 0.09);
+    return {
+      cardX,
+      cardY,
+      cardW,
+      cardH,
+      cardRadius: 38,
+      cardShadowBlur: 26,
+      cardShadowOffsetY: 10,
+      headerX,
+      headerY,
+      headerW,
+      mediaX,
+      mediaY,
+      mediaW,
+      mediaH,
+      detailsX: mediaX,
+      detailsY,
+      detailsW: mediaW,
+      footerOffset: height - footerY
+    };
+  }
+
+  if (style === "banner" || style === "landscape") {
+    const safeX = Math.round(width * 0.035);
+    const safeY = Math.round(height * 0.055);
+    const cardX = safeX;
+    const cardY = safeY;
+    const cardW = width - (safeX * 2);
+    const cardH = height - (safeY * 2);
+    const innerPad = Math.round(cardW * 0.026);
+    const headerInset = Math.round(cardW * 0.03);
+    const headerX = cardX + headerInset;
+    const headerY = cardY + Math.round(cardH * 0.06);
+    const headerW = cardW - (headerInset * 2);
+    const mediaX = cardX + innerPad;
+    const mediaY = headerY + Math.round(cardH * 0.13);
+    const mediaW = cardW - (innerPad * 2);
+    const mediaH = imageCount ? Math.round(cardH * (style === "banner" ? 0.43 : 0.45)) : Math.round(cardH * 0.34);
+    const detailsY = mediaY + mediaH + Math.round(cardH * 0.075);
+    const footerY = cardY + cardH - Math.round(cardH * 0.08);
+    return {
+      cardX,
+      cardY,
+      cardW,
+      cardH,
+      cardRadius: 34,
+      cardShadowBlur: 22,
+      cardShadowOffsetY: 9,
+      headerX,
+      headerY,
+      headerW,
+      mediaX,
+      mediaY,
+      mediaW,
+      mediaH,
+      detailsX: mediaX,
+      detailsY,
+      detailsW: mediaW,
+      footerOffset: height - footerY
+    };
+  }
+
+  const margin = Math.round(width * 0.04);
+  const cardX = Math.round(width * 0.039);
+  const cardY = Math.round(height * 0.032);
+  const cardW = width - (cardX * 2);
+  const cardH = height - (cardY * 2);
+  const headerX = margin;
+  const headerY = cardY + Math.round(cardH * 0.055);
+  const headerW = width - (margin * 2);
+  const mediaY = headerY + Math.round(cardH * 0.09);
+  const mediaH = imageCount ? Math.round(cardH * 0.505) : Math.round(cardH * 0.45);
+  const footerY = cardY + cardH - Math.round(cardH * 0.085);
   const footerOffset = height - footerY;
 
   return {
@@ -2517,18 +2662,18 @@ function getMemoryShareLayout(width, height, isStory, imageCount) {
     cardW,
     cardH,
     cardRadius: 42,
-    cardShadowBlur: 32,
-    cardShadowOffsetY: 14,
+    cardShadowBlur: 30,
+    cardShadowOffsetY: 12,
     headerX,
     headerY,
     headerW,
-    mediaX,
+    mediaX: margin,
     mediaY,
-    mediaW,
+    mediaW: width - (margin * 2),
     mediaH,
-    detailsX: mediaX,
-    detailsY,
-    detailsW: mediaW,
+    detailsX: margin,
+    detailsY: mediaY + mediaH + Math.round(cardH * 0.068),
+    detailsW: width - (margin * 2),
     footerOffset
   };
 }
@@ -2840,29 +2985,36 @@ function drawHeartPath(ctx, cx, cy, size) {
   ctx.closePath();
 }
 
-function drawShareDetails(ctx, post, x, y, width, hasPhoto = false, canvasHeight = MEMORY_SHARE_IMAGE_HEIGHT, footerOffset = 118) {
-  const titleMaxY = canvasHeight - footerOffset - 157;
-  const captionMaxY = canvasHeight - footerOffset - 92;
+function drawShareDetails(ctx, post, x, y, width, hasPhoto = false, canvasWidth = MEMORY_SHARE_IMAGE_WIDTH, canvasHeight = MEMORY_SHARE_IMAGE_HEIGHT, footerOffset = 118) {
+  const compactCanvas = canvasHeight < 1000;
+  const titleSafeGap = Math.max(compactCanvas ? 84 : 104, Math.min(157, Math.round(canvasHeight * 0.11)));
+  const captionSafeGap = Math.max(compactCanvas ? 52 : 66, Math.min(92, Math.round(canvasHeight * 0.07)));
+  const titleMaxY = canvasHeight - footerOffset - titleSafeGap;
+  const captionMaxY = canvasHeight - footerOffset - captionSafeGap;
+
+  const titleFontSize = hasPhoto ? (compactCanvas ? 34 : 39) : (compactCanvas ? 40 : 48);
+  const titleLineHeight = hasPhoto ? (compactCanvas ? 40 : 47) : (compactCanvas ? 50 : 58);
+  const captionFontSize = hasPhoto ? (compactCanvas ? 24 : 26) : (compactCanvas ? 28 : 31);
+  const captionLineHeight = hasPhoto ? (compactCanvas ? 30 : 34) : (compactCanvas ? 38 : 42);
+  const titleMaxLines = hasPhoto ? (compactCanvas ? 3 : 2) : 3;
 
   ctx.fillStyle = "#111111";
-  ctx.font = hasPhoto ? "900 39px Arial, Helvetica, sans-serif" : "900 48px Arial, Helvetica, sans-serif";
-  const titleLineHeight = hasPhoto ? 47 : 58;
-  const titleLines = wrapCanvasText(ctx, post.title || "Untitled Memory", x, y, width, titleLineHeight, hasPhoto ? 2 : 3);
-  let cursorY = y + (titleLines * titleLineHeight) + 18;
+  ctx.font = `900 ${titleFontSize}px Arial, Helvetica, sans-serif`;
+  const titleLines = wrapCanvasText(ctx, post.title || "Untitled Memory", x, y, width, titleLineHeight, titleMaxLines);
+  let cursorY = y + (titleLines * titleLineHeight) + (compactCanvas ? 12 : 14);
 
   if (post.caption && cursorY < titleMaxY) {
     ctx.fillStyle = "#36332d";
-    ctx.font = hasPhoto ? "700 26px Arial, Helvetica, sans-serif" : "700 31px Arial, Helvetica, sans-serif";
-    const captionLineHeight = hasPhoto ? 34 : 42;
-    const maxCaptionLines = Math.max(1, Math.min(hasPhoto ? 2 : 4, Math.floor((captionMaxY - cursorY) / captionLineHeight)));
+    ctx.font = `700 ${captionFontSize}px Arial, Helvetica, sans-serif`;
+    const maxCaptionLines = Math.max(1, Math.min(hasPhoto ? (compactCanvas ? 3 : 2) : 4, Math.floor((captionMaxY - cursorY) / captionLineHeight)));
     const captionLines = wrapCanvasText(ctx, post.caption, x, cursorY, width, captionLineHeight, maxCaptionLines);
-    cursorY += (captionLines * captionLineHeight) + 26;
+    cursorY += (captionLines * captionLineHeight) + (compactCanvas ? 16 : 18);
   } else {
-    cursorY += 20;
+    cursorY += compactCanvas ? 12 : 14;
   }
 
-  const metaY = Math.min(cursorY, canvasHeight - footerOffset - 96);
-  const avatarSize = 60;
+  const metaY = Math.min(cursorY, canvasHeight - footerOffset - (compactCanvas ? 78 : 96));
+  const avatarSize = compactCanvas ? 52 : 60;
 
   ctx.save();
   ctx.shadowColor = "rgba(17,17,17,.10)";
@@ -2880,7 +3032,7 @@ function drawShareDetails(ctx, post, x, y, width, hasPhoto = false, canvasHeight
   ctx.arc(x + avatarSize / 2, metaY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
   ctx.stroke();
   ctx.fillStyle = "#111111";
-  ctx.font = "900 24px Arial, Helvetica, sans-serif";
+  ctx.font = `900 ${compactCanvas ? 21 : 24}px Arial, Helvetica, sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(getInitials(post.postedBy), x + avatarSize / 2, metaY + avatarSize / 2 + 1);
@@ -2888,16 +3040,16 @@ function drawShareDetails(ctx, post, x, y, width, hasPhoto = false, canvasHeight
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = "#111111";
-  ctx.font = "900 27px Arial, Helvetica, sans-serif";
-  ctx.fillText(post.postedBy || "SFK", x + avatarSize + 18, metaY + 40);
+  ctx.font = `900 ${compactCanvas ? 24 : 27}px Arial, Helvetica, sans-serif`;
+  ctx.fillText(post.postedBy || "SFK", x + avatarSize + 18, metaY + (compactCanvas ? 34 : 40));
 
-  if (post.media.length) {
+  if ((post.media || []).length) {
     const attachmentText = `${post.media.length} attachment${post.media.length > 1 ? "s" : ""}`;
     ctx.fillStyle = "#6a5a16";
-    ctx.font = "800 21px Arial, Helvetica, sans-serif";
+    ctx.font = `800 ${compactCanvas ? 18 : 21}px Arial, Helvetica, sans-serif`;
     ctx.textAlign = "right";
     ctx.textBaseline = "alphabetic";
-    ctx.fillText(attachmentText, x + width, metaY + 43);
+    ctx.fillText(attachmentText, x + width, metaY + (compactCanvas ? 37 : 43));
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
   }
