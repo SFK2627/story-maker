@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=4-size-layout-safe" />
 </head>
 <body>
   <header class="topbar">
@@ -73,6 +73,10 @@
         <div class="segmented" role="group" aria-label="Output size">
           <button class="segment active" type="button" data-size="story">FB / IG Story<br><small>1080 × 1920</small></button>
           <button class="segment" type="button" data-size="post">Original Post<br><small>1080 × 1350</small></button>
+          <button class="segment" type="button" data-size="square">Square Post<br><small>1080 × 1080</small></button>
+          <button class="segment" type="button" data-size="wide">Facebook Wide<br><small>1200 × 630</small></button>
+          <button class="segment" type="button" data-size="landscape">Widescreen<br><small>1920 × 1080</small></button>
+          <button class="segment" type="button" data-size="wallpaper">Phone Wallpaper<br><small>1440 × 2560</small></button>
         </div>
       </div>
 
@@ -100,6 +104,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=4-size-layout-safe"></script>
 </body>
 </html>

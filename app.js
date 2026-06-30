@@ -2,8 +2,12 @@
   "use strict";
 
   const SIZES = {
-    story: { width: 1080, height: 1920, label: "FB / IG Story", suffix: "story" },
-    post: { width: 1080, height: 1350, label: "Original Post", suffix: "post" }
+    story: { width: 1080, height: 1920, label: "FB / IG Story", suffix: "story", layout: "story" },
+    post: { width: 1080, height: 1350, label: "Original Post", suffix: "post", layout: "post" },
+    square: { width: 1080, height: 1080, label: "Square Post", suffix: "square", layout: "square" },
+    wide: { width: 1200, height: 630, label: "Facebook Wide", suffix: "wide", layout: "wide" },
+    landscape: { width: 1920, height: 1080, label: "Widescreen", suffix: "widescreen", layout: "landscape" },
+    wallpaper: { width: 1440, height: 2560, label: "Phone Wallpaper", suffix: "wallpaper", layout: "story" }
   };
 
   const PRESETS = {
@@ -56,12 +60,25 @@
 
   function init() {
     els.date.value = formatDate(new Date());
+    ensureOutputSizeButtons();
     bindEvents();
     resizeCanvas();
     scheduleRender();
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("sw.js").catch(() => {});
     }
+  }
+
+
+  function ensureOutputSizeButtons() {
+    const segmented = document.querySelector(".segmented");
+    if (!segmented) return;
+    const order = ["story", "post", "square", "wide", "landscape", "wallpaper"];
+    segmented.innerHTML = order.map((key) => {
+      const size = SIZES[key];
+      const active = key === state.size ? " active" : "";
+      return `<button class="segment${active}" type="button" data-size="${key}">${size.label}<br><small>${size.width} × ${size.height}</small></button>`;
+    }).join("");
   }
 
   function bindEvents() {
@@ -210,41 +227,32 @@
 
   function drawShareCard(ctx, post, size) {
     const { width, height } = size;
-    const isStory = height > 1500;
     drawShareBackground(ctx, width, height);
 
-    // ClassBoard-style card layout. These fixed regions keep the header,
-    // date pill, collage, details, author row, and footer from colliding.
-    const cardX = isStory ? 42 : 34;
-    const cardY = isStory ? 58 : 28;
-    const cardW = width - cardX * 2;
-    const cardH = height - cardY * 2;
-    const margin = cardX + (isStory ? 44 : 38);
-    const contentW = width - margin * 2;
-    const headerY = cardY + (isStory ? 72 : 58);
-    const mediaY = cardY + (isStory ? 258 : 192);
-    const mediaH = isStory
-      ? (post.media.length ? 980 : 900)
-      : (post.media.length ? 690 : 620);
-    const detailsY = mediaY + mediaH + (isStory ? 58 : 44);
-    const footerOffset = isStory ? 166 : 108;
+    const layout = getShareLayout(size, post.media.length > 0);
+    const {
+      cardX, cardY, cardW, cardH, margin, contentW,
+      headerY, mediaY, mediaH, detailsY, footerOffset, cardRadius
+    } = layout;
 
     ctx.save();
     ctx.shadowColor = "rgba(17,17,17,.16)";
-    ctx.shadowBlur = 30;
-    ctx.shadowOffsetY = 12;
-    roundRect(ctx, cardX, cardY, cardW, cardH, 42);
+    ctx.shadowBlur = Math.max(18, Math.round(width * 0.028));
+    ctx.shadowOffsetY = Math.max(8, Math.round(height * 0.006));
+    roundRect(ctx, cardX, cardY, cardW, cardH, cardRadius);
     ctx.fillStyle = "#ffffff";
     ctx.fill();
     ctx.restore();
 
-    roundRect(ctx, cardX, cardY, cardW, cardH, 42);
+    roundRect(ctx, cardX, cardY, cardW, cardH, cardRadius);
     ctx.lineWidth = 3;
     ctx.strokeStyle = "#181818";
     ctx.stroke();
 
     ctx.save();
-    roundRect(ctx, cardX + 28, cardY + 26, cardW - 56, 6, 4);
+    const accentY = cardY + Math.max(14, Math.round(cardH * 0.018));
+    const accentInset = Math.max(20, Math.round(cardW * 0.03));
+    roundRect(ctx, cardX + accentInset, accentY, cardW - accentInset * 2, Math.max(5, Math.round(cardH * 0.0045)), 4);
     ctx.fillStyle = "#f7c600";
     ctx.globalAlpha = .96;
     ctx.fill();
@@ -254,6 +262,119 @@
     drawMedia(ctx, post, margin, mediaY, contentW, mediaH);
     drawDetails(ctx, post, margin, detailsY, contentW, post.media.length > 0, height, footerOffset);
     drawFooter(ctx, width, height, footerOffset);
+  }
+
+  function getShareLayout(size, hasMedia) {
+    const { width, height, layout } = size;
+    const scale = width / 1080;
+
+    if (layout === "story") {
+      const cardX = Math.round(width * 0.039);
+      const cardY = Math.round(height * 0.032);
+      const cardW = width - cardX * 2;
+      const cardH = height - cardY * 2;
+      const margin = cardX + Math.round(44 * scale);
+      const headerY = cardY + Math.round(76 * scale);
+      const mediaY = headerY + Math.round(108 * scale);
+      const mediaH = hasMedia ? Math.round(815 * scale) : Math.round(735 * scale);
+      return {
+        cardX, cardY, cardW, cardH,
+        margin,
+        contentW: width - margin * 2,
+        headerY,
+        mediaY,
+        mediaH,
+        detailsY: mediaY + mediaH + Math.round(88 * scale),
+        footerOffset: Math.round(166 * scale),
+        cardRadius: Math.round(42 * scale)
+      };
+    }
+
+    if (layout === "square") {
+      const cardX = 34;
+      const cardY = 28;
+      const cardW = width - cardX * 2;
+      const cardH = height - cardY * 2;
+      const margin = 62;
+      const headerY = 78;
+      const mediaY = 166;
+      const mediaH = hasMedia ? 374 : 336;
+      return {
+        cardX, cardY, cardW, cardH,
+        margin,
+        contentW: width - margin * 2,
+        headerY,
+        mediaY,
+        mediaH,
+        detailsY: mediaY + mediaH + 78,
+        footerOffset: 98,
+        cardRadius: 36
+      };
+    }
+
+    if (layout === "wide") {
+      const cardX = 28;
+      const cardY = 20;
+      const cardW = width - cardX * 2;
+      const cardH = height - cardY * 2;
+      const margin = 54;
+      const headerY = 66;
+      const mediaY = 140;
+      const mediaH = hasMedia ? 178 : 160;
+      return {
+        cardX, cardY, cardW, cardH,
+        margin,
+        contentW: width - margin * 2,
+        headerY,
+        mediaY,
+        mediaH,
+        detailsY: mediaY + mediaH + 44,
+        footerOffset: 72,
+        cardRadius: 30
+      };
+    }
+
+    if (layout === "landscape") {
+      const cardX = 44;
+      const cardY = 30;
+      const cardW = width - cardX * 2;
+      const cardH = height - cardY * 2;
+      const margin = 86;
+      const headerY = 90;
+      const mediaY = 194;
+      const mediaH = hasMedia ? 344 : 312;
+      return {
+        cardX, cardY, cardW, cardH,
+        margin,
+        contentW: width - margin * 2,
+        headerY,
+        mediaY,
+        mediaH,
+        detailsY: mediaY + mediaH + 74,
+        footerOffset: 100,
+        cardRadius: 38
+      };
+    }
+
+    const cardX = 42;
+    const cardY = 40;
+    const cardW = width - cardX * 2;
+    const cardH = height - cardY * 2;
+    const margin = 64;
+    const headerY = 86;
+    const mediaY = 184;
+    const mediaH = hasMedia ? 574 : 510;
+    return {
+      cardX, cardY, cardW, cardH,
+      margin,
+      contentW: width - margin * 2,
+      headerY,
+      mediaY,
+      mediaH,
+      detailsY: mediaY + mediaH + 76,
+      footerOffset: 112,
+      cardRadius: 42
+    };
   }
 
   function drawShareBackground(ctx, width, height) {
@@ -399,7 +520,7 @@
       roundRect(ctx, box.x, box.y, box.w, box.h, box.r);
       ctx.clip();
       if (preview.length === 1) {
-        drawContainImage(ctx, preview[index].image, box.x, box.y, box.w, box.h);
+        drawSingleImageWithBlurBackdrop(ctx, preview[index].image, box.x, box.y, box.w, box.h);
       } else {
         drawCoverImage(ctx, preview[index].image, box.x, box.y, box.w, box.h);
       }
@@ -519,32 +640,36 @@
   }
 
   function drawDetails(ctx, post, x, y, width, hasPhoto, canvasHeight, footerOffset) {
-    const footerTop = canvasHeight - footerOffset - 36;
-    const metaReserve = hasPhoto ? 92 : 100;
+    const compact = canvasHeight <= 700;
+    const footerTop = canvasHeight - footerOffset - (compact ? 24 : 36);
+    const metaReserve = compact ? 66 : (hasPhoto ? 92 : 100);
     const textBottom = footerTop - metaReserve;
+
+    const titleSize = compact ? 28 : (hasPhoto ? 43 : 54);
+    const titleLineHeight = compact ? 34 : (hasPhoto ? 51 : 64);
+    const captionSize = compact ? 20 : (hasPhoto ? 28 : 32);
+    const captionLineHeight = compact ? 26 : (hasPhoto ? 36 : 43);
+    const maxTitleLines = compact ? 2 : (hasPhoto ? 2 : 3);
 
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = "#111111";
-    ctx.font = hasPhoto ? "900 43px Arial, Helvetica, sans-serif" : "900 54px Arial, Helvetica, sans-serif";
-    const titleLineHeight = hasPhoto ? 51 : 64;
-    const maxTitleLines = hasPhoto ? 2 : 3;
+    ctx.font = `900 ${titleSize}px Arial, Helvetica, sans-serif`;
     const titleLines = wrapText(ctx, post.title || "Untitled Memory", x, y, width, titleLineHeight, maxTitleLines);
-    let cursorY = y + Math.max(1, titleLines) * titleLineHeight + (hasPhoto ? 24 : 28);
+    let cursorY = y + Math.max(1, titleLines) * titleLineHeight + (compact ? 7 : 10);
 
     if (post.caption && cursorY < textBottom) {
       ctx.fillStyle = "#36332d";
-      ctx.font = hasPhoto ? "700 28px Arial, Helvetica, sans-serif" : "700 32px Arial, Helvetica, sans-serif";
-      const captionLineHeight = hasPhoto ? 36 : 43;
-      const maxCaptionLines = Math.max(1, Math.min(hasPhoto ? 2 : 4, Math.floor((textBottom - cursorY) / captionLineHeight)));
+      ctx.font = `700 ${captionSize}px Arial, Helvetica, sans-serif`;
+      const maxCaptionLines = Math.max(1, Math.min(compact ? 2 : (hasPhoto ? 2 : 4), Math.floor((textBottom - cursorY) / captionLineHeight)));
       const captionLines = wrapText(ctx, post.caption, x, cursorY, width, captionLineHeight, maxCaptionLines);
-      cursorY += captionLines * captionLineHeight + (hasPhoto ? 32 : 36);
+      cursorY += captionLines * captionLineHeight + (compact ? 9 : 12);
     } else {
-      cursorY += hasPhoto ? 16 : 22;
+      cursorY += compact ? 10 : 14;
     }
 
-    const metaY = Math.min(cursorY, footerTop - 72);
-    const avatarSize = hasPhoto ? 60 : 66;
+    const metaY = Math.min(cursorY, footerTop - (compact ? 58 : 72));
+    const avatarSize = compact ? 48 : (hasPhoto ? 60 : 66);
     ctx.save();
     ctx.shadowColor = "rgba(17,17,17,.10)";
     ctx.shadowBlur = 12;
@@ -561,7 +686,7 @@
     ctx.arc(x + avatarSize / 2, metaY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
     ctx.stroke();
     ctx.fillStyle = "#111111";
-    ctx.font = `900 ${hasPhoto ? 24 : 26}px Arial, Helvetica, sans-serif`;
+    ctx.font = `900 ${compact ? 19 : (hasPhoto ? 24 : 26)}px Arial, Helvetica, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(getInitials(post.postedBy), x + avatarSize / 2, metaY + avatarSize / 2 + 1);
@@ -569,12 +694,12 @@
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = "#111111";
-    ctx.font = `900 ${hasPhoto ? 29 : 32}px Arial, Helvetica, sans-serif`;
-    drawFittedText(ctx, post.postedBy || "SFK", x + avatarSize + 20, metaY + avatarSize / 2 + 11, width * 0.48, hasPhoto ? 29 : 32, 20, "900");
+    ctx.font = `900 ${compact ? 22 : (hasPhoto ? 29 : 32)}px Arial, Helvetica, sans-serif`;
+    drawFittedText(ctx, post.postedBy || "SFK", x + avatarSize + 20, metaY + avatarSize / 2 + (compact ? 8 : 11), width * 0.48, compact ? 22 : (hasPhoto ? 29 : 32), 18, "900");
 
     if (post.media.length) {
       ctx.fillStyle = "#6a5a16";
-      ctx.font = "800 22px Arial, Helvetica, sans-serif";
+      ctx.font = `${compact ? "800 18px" : "800 22px"} Arial, Helvetica, sans-serif`;
       ctx.textAlign = "right";
       ctx.textBaseline = "middle";
       ctx.fillText(`${post.media.length} attachment${post.media.length > 1 ? "s" : ""}`, x + width, metaY + avatarSize / 2 + 1);
@@ -631,6 +756,33 @@
     const drawX = x + (width - drawW) / 2;
     const drawY = y + (height - drawH) / 2;
     ctx.drawImage(image, drawX, drawY, drawW, drawH);
+  }
+
+  function drawSingleImageWithBlurBackdrop(ctx, image, x, y, width, height) {
+    ctx.fillStyle = "#111111";
+    ctx.fillRect(x, y, width, height);
+
+    ctx.save();
+    ctx.filter = "blur(18px)";
+    ctx.globalAlpha = 0.82;
+    drawCoverImage(ctx, image, x - 24, y - 24, width + 48, height + 48);
+    ctx.restore();
+
+    ctx.fillStyle = "rgba(17,17,17,.36)";
+    ctx.fillRect(x, y, width, height);
+
+    const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
+    const drawW = image.naturalWidth * scale;
+    const drawH = image.naturalHeight * scale;
+    const drawX = x + (width - drawW) / 2;
+    const drawY = y + (height - drawH) / 2;
+
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,.26)";
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 8;
+    ctx.drawImage(image, drawX, drawY, drawW, drawH);
+    ctx.restore();
   }
 
   function drawContainImage(ctx, image, x, y, width, height) {

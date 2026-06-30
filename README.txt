@@ -23,3 +23,6 @@ Files:
 - icons/icon-maskable-512.png
 
 This app does not touch your current SFK ClassBoard files unless you upload it over them.
+
+
+Update notes: Added 6 output sizes and improved mobile layout/spacing for the Story Maker preview.

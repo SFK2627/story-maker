@@ -146,7 +146,7 @@ input[type="text"], textarea {
   color: #111;
   resize: vertical;
 }
-textarea { min-height: 106px; }
+textarea { min-height: 92px; }
 input[type="text"]:focus, textarea:focus { border-color: #111; box-shadow: 0 0 0 4px rgba(247,198,0,.26); }
 .gridTwo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
@@ -194,15 +194,15 @@ input[type="text"]:focus, textarea:focus { border-color: #111; box-shadow: 0 0 0
 
 .segmented {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   background: #111;
   border: 2px solid #111;
   border-radius: 20px;
-  padding: 4px;
-  gap: 4px;
+  padding: 5px;
+  gap: 5px;
 }
 .segment {
-  min-height: 64px;
+  min-height: 58px;
   border: 0;
   border-radius: 16px;
   background: transparent;
@@ -211,6 +211,9 @@ input[type="text"]:focus, textarea:focus { border-color: #111; box-shadow: 0 0 0
 }
 .segment.active { background: var(--gold); color: #111; }
 .segment small { font-weight: 800; opacity: .72; }
+.segment { font-size: 14px; line-height: 1.15; }
+.segment small { font-size: 11px; }
+
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
 .primaryBtn, .secondaryBtn {
   min-height: 54px;
@@ -292,4 +295,137 @@ input[type="text"]:focus, textarea:focus { border-color: #111; box-shadow: 0 0 0
   .quickPresets, .gridTwo { grid-template-columns: 1fr; }
   .actions { grid-template-columns: 1fr; }
   .photoStrip { grid-template-columns: repeat(3, 1fr); }
+}
+
+
+/* v2: mobile story-maker polish + 6-size output buttons */
+@media (max-width: 940px) {
+  .appShell {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+  .previewPanel {
+    position: sticky;
+    top: calc(74px + env(safe-area-inset-top));
+    z-index: 10;
+  }
+  .canvasStage {
+    max-height: 62vh;
+    display: grid;
+    place-items: center;
+    overflow: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  body {
+    overflow-x: hidden;
+  }
+  .topbar {
+    gap: 10px;
+    padding: calc(9px + env(safe-area-inset-top)) 11px 9px;
+  }
+  .brandMark {
+    width: 44px;
+    height: 44px;
+    border-radius: 15px;
+  }
+  h1 {
+    font-size: 22px;
+  }
+  .brandText span {
+    display: none;
+  }
+  .appShell {
+    padding: 10px 8px calc(18px + env(safe-area-inset-bottom));
+  }
+  .previewPanel {
+    padding: 10px;
+    border-radius: 22px;
+  }
+  .previewHead {
+    margin-bottom: 8px;
+  }
+  .previewHead .eyebrow {
+    display: none;
+  }
+  .previewHead h2 {
+    font-size: 17px;
+  }
+  .statusPill {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .canvasStage {
+    padding: 8px;
+    border-radius: 18px;
+    max-height: 58vh;
+  }
+  #shareCanvas {
+    width: min(100%, 320px);
+    max-height: 55vh;
+    object-fit: contain;
+    border-radius: 16px;
+  }
+  .editorPanel {
+    border-radius: 24px 24px 18px 18px;
+  }
+  .fieldGroup {
+    margin: 10px 0;
+  }
+  input[type="text"], textarea {
+    border-radius: 15px;
+    padding: 12px 13px;
+  }
+  textarea {
+    min-height: 86px;
+  }
+  .uploadBox {
+    min-height: 92px;
+    border-radius: 18px;
+  }
+  .photoStrip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .segmented {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-radius: 18px;
+  }
+  .segment {
+    min-height: 56px;
+    padding: 8px 6px;
+    border-radius: 14px;
+    font-size: 13px;
+  }
+  .segment small {
+    font-size: 10px;
+  }
+  .actions {
+    position: sticky;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    z-index: 15;
+    grid-template-columns: 1fr 1fr;
+    padding: 8px;
+    margin: 12px -4px -4px;
+    border: 1px solid rgba(17,17,17,.12);
+    border-radius: 20px;
+    background: rgba(255,253,243,.92);
+    backdrop-filter: blur(14px);
+  }
+  .primaryBtn, .secondaryBtn {
+    min-height: 50px;
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 374px) {
+  .appShell { padding-left: 6px; padding-right: 6px; }
+  #shareCanvas { width: min(100%, 292px); }
+  .segment { font-size: 12px; }
+  .segment small { font-size: 9px; }
+  .photoStrip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (min-width: 431px) and (max-width: 600px) {
+  #shareCanvas { width: min(100%, 370px); }
 }
