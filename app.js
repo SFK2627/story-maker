@@ -511,9 +511,7 @@
     const hasHeartGap = post.media.length >= 4;
     const heartCx = innerX + innerW / 2;
     const heartCy = innerY + innerH / 2;
-    const heartSize = Math.min(innerW, innerH) * .105;
-
-    if (hasHeartGap) drawHeartGapBase(ctx, heartCx, heartCy, heartSize);
+    const heartSize = Math.max(18, Math.min(innerW, innerH) * .052);
 
     layout.forEach((box, index) => {
       ctx.save();
@@ -539,11 +537,7 @@
     });
 
     if (hasHeartGap) {
-      ctx.save();
-      ctx.globalCompositeOperation = "destination-out";
-      drawHeartPath(ctx, heartCx, heartCy, heartSize + 5);
-      ctx.fill();
-      ctx.restore();
+      drawHeartGapBase(ctx, heartCx, heartCy, heartSize);
     }
     ctx.restore();
   }
@@ -609,23 +603,17 @@
 
   function drawHeartGapBase(ctx, cx, cy, size) {
     ctx.save();
-    ctx.shadowColor = "rgba(17,17,17,.16)";
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetY = 4;
-    drawHeartPath(ctx, cx, cy, size + 6);
-    ctx.fillStyle = "rgba(255,255,255,.96)";
-    ctx.fill();
-    ctx.restore();
-
-    ctx.save();
+    ctx.shadowColor = "rgba(17,17,17,.20)";
+    ctx.shadowBlur = Math.max(5, size * .38);
+    ctx.shadowOffsetY = Math.max(2, size * .15);
     drawHeartPath(ctx, cx, cy, size);
     const gradient = ctx.createLinearGradient(cx - size, cy - size, cx + size, cy + size * 1.1);
     gradient.addColorStop(0, "#fff8bf");
-    gradient.addColorStop(0.45, "#f7c600");
+    gradient.addColorStop(0.42, "#f7c600");
     gradient.addColorStop(1, "#d7a600");
     ctx.fillStyle = gradient;
     ctx.fill();
-    ctx.lineWidth = 2;
+    ctx.lineWidth = Math.max(2, size * .08);
     ctx.strokeStyle = "#111111";
     ctx.stroke();
     ctx.restore();

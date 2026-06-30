@@ -429,3 +429,27 @@ input[type="text"]:focus, textarea:focus { border-color: #111; box-shadow: 0 0 0
 @media (min-width: 431px) and (max-width: 600px) {
   #shareCanvas { width: min(100%, 370px); }
 }
+
+/* v5: mobile preview should not behave like an overlay */
+@media (max-width: 940px) {
+  .previewPanel {
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .canvasStage {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  #shareCanvas {
+    width: min(100%, 330px);
+    max-height: none !important;
+  }
+}
+
+@media (max-width: 374px) {
+  #shareCanvas { width: min(100%, 300px); }
+}
