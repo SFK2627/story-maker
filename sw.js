@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-story-maker-v5-heart-mobile-overlay-fix";
+const CACHE_NAME = "sfk-story-maker-v6-balanced-bottom-space";
 const APP_SHELL = [
   "./",
   "./index.html",

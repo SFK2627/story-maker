@@ -275,8 +275,8 @@
       const cardH = height - cardY * 2;
       const margin = cardX + Math.round(44 * scale);
       const headerY = cardY + Math.round(76 * scale);
-      const mediaY = headerY + Math.round(108 * scale);
-      const mediaH = hasMedia ? Math.round(815 * scale) : Math.round(735 * scale);
+      const mediaY = headerY + Math.round(104 * scale);
+      const mediaH = hasMedia ? Math.round(960 * scale) : Math.round(820 * scale);
       return {
         cardX, cardY, cardW, cardH,
         margin,
@@ -284,8 +284,8 @@
         headerY,
         mediaY,
         mediaH,
-        detailsY: mediaY + mediaH + Math.round(88 * scale),
-        footerOffset: Math.round(166 * scale),
+        detailsY: mediaY + mediaH + Math.round(70 * scale),
+        footerOffset: Math.round(142 * scale),
         cardRadius: Math.round(42 * scale)
       };
     }
@@ -362,8 +362,8 @@
     const cardH = height - cardY * 2;
     const margin = 64;
     const headerY = 86;
-    const mediaY = 184;
-    const mediaH = hasMedia ? 574 : 510;
+    const mediaY = 176;
+    const mediaH = hasMedia ? 640 : 560;
     return {
       cardX, cardY, cardW, cardH,
       margin,
@@ -371,8 +371,8 @@
       headerY,
       mediaY,
       mediaH,
-      detailsY: mediaY + mediaH + 76,
-      footerOffset: 112,
+      detailsY: mediaY + mediaH + 66,
+      footerOffset: 98,
       cardRadius: 42
     };
   }
@@ -644,14 +644,14 @@
     ctx.fillStyle = "#111111";
     ctx.font = `900 ${titleSize}px Arial, Helvetica, sans-serif`;
     const titleLines = wrapText(ctx, post.title || "Untitled Memory", x, y, width, titleLineHeight, maxTitleLines);
-    let cursorY = y + Math.max(1, titleLines) * titleLineHeight + (compact ? 7 : 10);
+    let cursorY = y + Math.max(1, titleLines) * titleLineHeight + (compact ? 6 : 8);
 
     if (post.caption && cursorY < textBottom) {
       ctx.fillStyle = "#36332d";
       ctx.font = `700 ${captionSize}px Arial, Helvetica, sans-serif`;
       const maxCaptionLines = Math.max(1, Math.min(compact ? 2 : (hasPhoto ? 2 : 4), Math.floor((textBottom - cursorY) / captionLineHeight)));
       const captionLines = wrapText(ctx, post.caption, x, cursorY, width, captionLineHeight, maxCaptionLines);
-      cursorY += captionLines * captionLineHeight + (compact ? 9 : 12);
+      cursorY += captionLines * captionLineHeight + (compact ? 8 : 10);
     } else {
       cursorY += compact ? 10 : 14;
     }
