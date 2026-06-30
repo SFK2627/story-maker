@@ -55,6 +55,11 @@
   };
 
   const ctx = els.canvas.getContext("2d");
+  const CLASS_WATERMARK_SRC = "class-photo.jpg";
+  const classWatermarkImage = new Image();
+  classWatermarkImage.onload = () => scheduleRender();
+  classWatermarkImage.onerror = () => {};
+  classWatermarkImage.src = CLASS_WATERMARK_SRC;
   let renderTimer = null;
   let toastTimer = null;
 
@@ -232,7 +237,7 @@
     const layout = getShareLayout(size, post.media.length > 0);
     const {
       cardX, cardY, cardW, cardH, margin, contentW,
-      headerY, mediaY, mediaH, detailsY, footerOffset, cardRadius
+      headerY, mediaY, mediaH, detailsY, footerOffset, cardRadius, layoutName
     } = layout;
 
     ctx.save();
@@ -260,6 +265,7 @@
 
     drawHeader(ctx, post, margin, headerY, contentW);
     drawMedia(ctx, post, margin, mediaY, contentW, mediaH);
+    drawBottomClassPhotoWash(ctx, layout, width, height, layoutName);
     drawDetails(ctx, post, margin, detailsY, contentW, post.media.length > 0, height, footerOffset);
     drawFooter(ctx, width, height, footerOffset);
   }
@@ -275,7 +281,7 @@
       const cardH = height - cardY * 2;
       const margin = cardX + Math.round(44 * scale);
       const headerY = cardY + Math.round(76 * scale);
-      const mediaY = headerY + Math.round(104 * scale);
+      const mediaY = headerY + Math.round(118 * scale);
       const mediaH = hasMedia ? Math.round(960 * scale) : Math.round(820 * scale);
       return {
         cardX, cardY, cardW, cardH,
@@ -286,7 +292,8 @@
         mediaH,
         detailsY: mediaY + mediaH + Math.round(70 * scale),
         footerOffset: Math.round(142 * scale),
-        cardRadius: Math.round(42 * scale)
+        cardRadius: Math.round(42 * scale),
+        layoutName: "story"
       };
     }
 
@@ -297,7 +304,7 @@
       const cardH = height - cardY * 2;
       const margin = 62;
       const headerY = 78;
-      const mediaY = 166;
+      const mediaY = 178;
       const mediaH = hasMedia ? 374 : 336;
       return {
         cardX, cardY, cardW, cardH,
@@ -308,7 +315,8 @@
         mediaH,
         detailsY: mediaY + mediaH + 78,
         footerOffset: 98,
-        cardRadius: 36
+        cardRadius: 36,
+        layoutName: "square"
       };
     }
 
@@ -319,7 +327,7 @@
       const cardH = height - cardY * 2;
       const margin = 54;
       const headerY = 66;
-      const mediaY = 140;
+      const mediaY = 150;
       const mediaH = hasMedia ? 178 : 160;
       return {
         cardX, cardY, cardW, cardH,
@@ -330,7 +338,8 @@
         mediaH,
         detailsY: mediaY + mediaH + 44,
         footerOffset: 72,
-        cardRadius: 30
+        cardRadius: 30,
+        layoutName: "wide"
       };
     }
 
@@ -341,7 +350,7 @@
       const cardH = height - cardY * 2;
       const margin = 86;
       const headerY = 90;
-      const mediaY = 194;
+      const mediaY = 206;
       const mediaH = hasMedia ? 344 : 312;
       return {
         cardX, cardY, cardW, cardH,
@@ -352,7 +361,8 @@
         mediaH,
         detailsY: mediaY + mediaH + 74,
         footerOffset: 100,
-        cardRadius: 38
+        cardRadius: 38,
+        layoutName: "landscape"
       };
     }
 
@@ -362,7 +372,7 @@
     const cardH = height - cardY * 2;
     const margin = 64;
     const headerY = 86;
-    const mediaY = 176;
+    const mediaY = 188;
     const mediaH = hasMedia ? 640 : 560;
     return {
       cardX, cardY, cardW, cardH,
@@ -373,7 +383,8 @@
       mediaH,
       detailsY: mediaY + mediaH + 66,
       footerOffset: 98,
-      cardRadius: 42
+      cardRadius: 42,
+      layoutName: "post"
     };
   }
 
@@ -481,7 +492,7 @@
     ctx.shadowBlur = 24;
     ctx.shadowOffsetY = 10;
     roundRect(ctx, x, y, width, height, 38);
-    ctx.fillStyle = "#fff6c7";
+    ctx.fillStyle = "#ffffff";
     ctx.fill();
     ctx.restore();
 
@@ -511,7 +522,10 @@
     const hasHeartGap = post.media.length >= 4;
     const heartCx = innerX + innerW / 2;
     const heartCy = innerY + innerH / 2;
-    const heartSize = Math.max(18, Math.min(innerW, innerH) * .052);
+    // Keep the center heart only as a small divider accent that fits the 4-photo gap.
+    const heartSize = preview.length >= 4
+      ? Math.max(13, Math.min(18, gap * 1.15))
+      : Math.max(14, Math.min(innerW, innerH) * .034);
 
     layout.forEach((box, index) => {
       ctx.save();
@@ -604,8 +618,8 @@
   function drawHeartGapBase(ctx, cx, cy, size) {
     ctx.save();
     ctx.shadowColor = "rgba(17,17,17,.20)";
-    ctx.shadowBlur = Math.max(5, size * .38);
-    ctx.shadowOffsetY = Math.max(2, size * .15);
+    ctx.shadowBlur = Math.max(4, size * .26);
+    ctx.shadowOffsetY = Math.max(1.2, size * .09);
     drawHeartPath(ctx, cx, cy, size);
     const gradient = ctx.createLinearGradient(cx - size, cy - size, cx + size, cy + size * 1.1);
     gradient.addColorStop(0, "#fff8bf");
@@ -613,7 +627,7 @@
     gradient.addColorStop(1, "#d7a600");
     ctx.fillStyle = gradient;
     ctx.fill();
-    ctx.lineWidth = Math.max(2, size * .08);
+    ctx.lineWidth = Math.max(1.4, size * .07);
     ctx.strokeStyle = "#111111";
     ctx.stroke();
     ctx.restore();
@@ -625,6 +639,86 @@
     ctx.bezierCurveTo(cx - size * 1.35, cy + size * 0.18, cx - size * 1.2, cy - size * 0.72, cx, cy - size * 0.18);
     ctx.bezierCurveTo(cx + size * 1.2, cy - size * 0.72, cx + size * 1.35, cy + size * 0.18, cx, cy + size * 0.9);
     ctx.closePath();
+  }
+
+  function drawBottomClassPhotoWash(ctx, layout, canvasWidth, canvasHeight, layoutName) {
+    if (!classWatermarkImage.complete || !classWatermarkImage.naturalWidth) return;
+    if (layoutName !== "story" && layoutName !== "post") return;
+
+    const footerY = canvasHeight - layout.footerOffset;
+    const scale = canvasWidth / 1080;
+
+    // Start earlier and cover more of the lower blank area.
+    // It is drawn behind the title/author row, so text stays readable.
+    const washY = layout.detailsY + Math.round((layoutName === "story" ? 118 : 86) * scale);
+    const washBottom = footerY - Math.round((layoutName === "story" ? 46 : 36) * scale);
+    const washH = Math.max(Math.round((layoutName === "story" ? 260 : 190) * scale), washBottom - washY);
+    if (washH < 70) return;
+
+    const washX = layout.margin + Math.round(layout.contentW * 0.015);
+    const washW = layout.contentW - Math.round(layout.contentW * 0.03);
+
+    const photoW = Math.round(washW * (layoutName === "story" ? 1.02 : 1.04));
+    const photoH = Math.round(washH * (layoutName === "story" ? 1.55 : 1.48));
+    const photoX = washX + Math.round((washW - photoW) / 2);
+    const photoY = washY - Math.round(washH * 0.24);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(washX, washY, washW, washH);
+    ctx.clip();
+
+    // Wider, more visible memory wash.
+    ctx.globalAlpha = layoutName === "story" ? 0.18 : 0.16;
+    ctx.filter = "grayscale(0.03) saturate(0.9) brightness(1.04) blur(12px)";
+    drawCoverImage(ctx, classWatermarkImage, photoX - 30, photoY - 24, photoW + 60, photoH + 48);
+
+    // Light readable silhouette layer.
+    ctx.globalAlpha = layoutName === "story" ? 0.078 : 0.068;
+    ctx.filter = "grayscale(0.02) saturate(0.95) brightness(1.02) blur(3px)";
+    drawCoverImage(ctx, classWatermarkImage, photoX, photoY, photoW, photoH);
+
+    ctx.filter = "none";
+    ctx.globalAlpha = 1;
+
+    // Strong feathering so no top/bottom edge of the photo is obvious.
+    const verticalFade = ctx.createLinearGradient(0, washY, 0, washY + washH);
+    verticalFade.addColorStop(0, "rgba(255,255,255,1)");
+    verticalFade.addColorStop(0.10, "rgba(255,255,255,0.94)");
+    verticalFade.addColorStop(0.26, "rgba(255,255,255,0.72)");
+    verticalFade.addColorStop(0.50, "rgba(255,255,255,0.50)");
+    verticalFade.addColorStop(0.74, "rgba(255,255,255,0.72)");
+    verticalFade.addColorStop(0.90, "rgba(255,255,255,0.94)");
+    verticalFade.addColorStop(1, "rgba(255,255,255,1)");
+    ctx.fillStyle = verticalFade;
+    ctx.fillRect(washX, washY, washW, washH);
+
+    const sideFade = ctx.createLinearGradient(washX, 0, washX + washW, 0);
+    sideFade.addColorStop(0, "rgba(255,255,255,0.98)");
+    sideFade.addColorStop(0.08, "rgba(255,255,255,0.70)");
+    sideFade.addColorStop(0.20, "rgba(255,255,255,0.22)");
+    sideFade.addColorStop(0.50, "rgba(255,255,255,0.015)");
+    sideFade.addColorStop(0.80, "rgba(255,255,255,0.22)");
+    sideFade.addColorStop(0.92, "rgba(255,255,255,0.70)");
+    sideFade.addColorStop(1, "rgba(255,255,255,0.98)");
+    ctx.fillStyle = sideFade;
+    ctx.fillRect(washX, washY, washW, washH);
+
+    // Center glow blends it into the white space and footer.
+    const glow = ctx.createRadialGradient(
+      washX + washW / 2,
+      washY + washH * 0.58,
+      10,
+      washX + washW / 2,
+      washY + washH * 0.58,
+      washW * 0.52
+    );
+    glow.addColorStop(0, "rgba(255,255,255,0)");
+    glow.addColorStop(0.74, "rgba(255,255,255,0.10)");
+    glow.addColorStop(1, "rgba(255,255,255,0.32)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(washX, washY, washW, washH);
+    ctx.restore();
   }
 
   function drawDetails(ctx, post, x, y, width, hasPhoto, canvasHeight, footerOffset) {

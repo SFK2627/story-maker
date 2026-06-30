@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-story-maker-v6-balanced-bottom-space";
+const CACHE_NAME = "sfk-story-maker-v16-media-lower";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,6 +6,7 @@ const APP_SHELL = [
   "./app.js",
   "./manifest.webmanifest",
   "./app-icon.svg",
+  "./class-photo.jpg",
   "./icons/icon-192.png",
   "./icons/icon-maskable-512.png"
 ];
